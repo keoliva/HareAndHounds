@@ -159,7 +159,6 @@ void drawGame(loc *selected_coord, string err_message)
     glLineWidth(0.5);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     drawBoard();
-
     updateText(err_message);
 }
 
@@ -176,7 +175,8 @@ void updateText(string message)
     renderString(window_width/5, window_height*6.5/7, font, "ROUND: 1", 8);
     renderString(window_width/5, window_height/7, font, "YOU: 1", 6);
     renderString(window_width*3.5/5, window_height/7, font, "OPP: 2", 6);
-    renderString(window_width*2.25/5, window_height/7, font, message.c_str(), 9);
+    int _size = message.length();
+    renderString(window_width*2.25/5, window_height/7, font, message.c_str(), _size);
     restorePerspectiveProjection();
 }
 void setOrthographicProjection(int w, int h)

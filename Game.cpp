@@ -6,13 +6,13 @@ const int num_rounds = 3;
 loc hounds_dirs[] = {
     loc(1, 0), loc(-1, 0), // vertical
     loc(0, 1), // forward
-    loc(1, -1), loc(1, 1), // diagonally (left to right)
+    loc(-1, 1), loc(1, 1), // diagonally (left to right)
 };
 loc hare_dirs[] = {
     loc(-1, 0), loc(1, 0), // vertical
     loc(0, -1), loc(0, 1), // horizontal
-    loc(1, -1), loc(1, 1), // diagonally (left to right)
-    loc(-1, -1), loc(-1, 1) // diagonally (right to left)
+    loc(-1, 1), loc(1, 1), // diagonally (left to right)
+    loc(-1, -1), loc(1, -1) // diagonally (right to left)
 };
 
 player board::get(loc pos) {
