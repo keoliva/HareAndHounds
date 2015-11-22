@@ -18,13 +18,15 @@ enum Win {
 };
 class outcome {
   public:
-    virtual std::string outcome_to_string() { return ""; };
+    virtual ~outcome() {};
+    virtual std::string outcome_to_string() = 0;
 };
 class Winner : public outcome {
   public:
     player _player;
     Win win;
     Winner (player p, Win w): _player(p), win(w) {};
+    ~Winner() { std::cout << "deleting Winner"<<std::endl; };
     std::string outcome_to_string() {
         std::stringstream ss;
         ss << "Winner<" << ((_player == HOUNDS)?"HOUNDS":"HARE") << ">";
@@ -34,20 +36,24 @@ class Winner : public outcome {
 
 class status {
   public:
-    virtual std::string status_to_string() { return ""; };
+    virtual ~status() {};
+    virtual std::string status_to_string() = 0;
 };
 class Over : public status {
   public:
-    outcome _outcome;
-    Over(outcome o) : _outcome(o) {};
+    outcome *_outcome;
+    Over() {};
+    Over(outcome *o) : _outcome(o) {};
+    ~Over() { delete _outcome; };
     std::string status_to_string() {
         std::stringstream ss;
-        ss << "Over<" << _outcome.outcome_to_string() << ">";
+        ss << "Over<" << _outcome->outcome_to_string() << ">";
         return ss.str();
     };
 };
 class In_Play : public status {
   public:
+    ~In_Play() { std::cout << "deleting In_Play"; };
     std::string status_to_string() { return "In_Play"; };
 };
 
@@ -86,25 +92,28 @@ class MovePlayer : public gameMove {
     MovePlayer(loc from, loc to) : from_loc(from), to_loc(to) {};
 };
 
+struct IllegalMoveError : public std::exception {};
 class HHGame {
     int rounds, hare_score, hounds_score, turns, hounds_vertical_moves; // in a row
+    bool roundIsOver;
     state curr_state;
     void init_state();
     void switch_player();
+    bool is_legal_move(MovePlayer *m);
     std::vector<loc> neighbors(loc player_piece, loc dirs[]);
   public:
     HHGame();
     void restart();
+    bool roundOver();
     bool gameOver();
     int get_hare_score();
     int get_hounds_score();
     int get_round();
-    player get_player();
-    board get_board();
-    status get_status();
     loc get_hare();
     loc *get_hounds();
-    bool is_legal_move(MovePlayer *m);
+    player get_player();
+    board get_board();
+    status *get_status();
     void make_move(MovePlayer *m);
 };
 

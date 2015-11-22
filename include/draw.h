@@ -13,7 +13,7 @@
 #include <math.h>
 #include <sstream>
 // HHGame *game
-void drawGame(loc *selected_coord=nullptr, std::string err_message="you good");
+void drawGame(HHGame *game=nullptr, loc *selected_coord=nullptr, std::string err_message="");
 
 loc getBoardCoordOfSelection(int index);
 #endif // INIT_H_INCLUDED

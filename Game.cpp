@@ -24,6 +24,7 @@ void board::setPos(loc pos, player p) {
 
 HHGame::HHGame() {
     rounds = 0;
+    roundIsOver = false;
     hounds_score = 0;
     hare_score = 0;
     turns = 0;
@@ -34,6 +35,7 @@ HHGame::HHGame() {
 void HHGame::restart(void)
 {
     rounds++;
+    roundIsOver = false;
     turns = 0;
     hounds_vertical_moves = 0;
     if (gameOver()) {
@@ -71,9 +73,11 @@ board HHGame::get_board()
     // check if the hounds trap the Hare
     return curr_state._board;
 }
-
+bool HHGame::roundOver() {
+    return roundIsOver;
+}
 bool HHGame::gameOver() {
-    return (rounds % 3) == 3;
+    return roundIsOver && rounds == 2;
 }
 int HHGame::get_hare_score() {
     return hare_score;
@@ -82,7 +86,7 @@ int HHGame::get_hounds_score() {
     return hounds_score;
 }
 int HHGame::get_round() {
-    return rounds;
+    return rounds + 1; // since 0 <= rounds
 }
 
 loc HHGame::get_hare() {
@@ -106,7 +110,7 @@ loc *HHGame::get_hounds()
 {
     board b = get_board();
     int hounds_found=0, rows = 3, cols;
-    loc pos, hounds[3];
+    loc pos, *hounds = new loc[3];
     player p;
     for (int r = 0; r < rows; r++) {
         if (r % 2 == 0) cols = 3;
@@ -122,31 +126,40 @@ loc *HHGame::get_hounds()
     }
     return hounds;
 }
-status HHGame::get_status()
+status *HHGame::get_status()
 {
     // check if hare wins because Hounds stalled
     if (hounds_vertical_moves == 10) {
-        return Over(Winner(HARE, STALL));
+        Over *over = new Over(new Winner(HARE, STALL));
+        return over;
     }
     // check if hare escapes (gets to the left of all the Hounds)
     bool hare_escapes = true;
     loc hare = get_hare();
+    if (hare.x % 2 == 0) hare.y++;
     loc *hounds = get_hounds();
     for (int i = 0; i < 3; i++) {
-        if (hare.x > hounds[i].x) {
+        if (hounds[i].x % 2 == 0) hounds[i].y++;
+        if (hare.y > hounds[i].y) {
             hare_escapes = false;
             break;
         }
     }
+    delete[] hounds;
+    if (hare.x % 2 == 0) hare.y--; // reset the y coordinate
     if (hare_escapes) {
-        return Over(Winner(HARE, ESCAPE));
+        cout << "HARE ESCAPED!";
+        Over *over = new Over(new Winner(HARE, ESCAPE));
+        return over;
     }
     // hounds win if hare cannot escape
     vector<loc> hare_possible_moves = neighbors(hare, hare_dirs);
     if (hare_possible_moves.size() == 0) {
-        return Over(Winner(HOUNDS, TRAP));
+        Over *over = new Over(new Winner(HOUNDS, TRAP));
+        return over;
     }
-    return In_Play();
+    In_Play *in_play = new In_Play();
+    return in_play;
 }
 
 bool in_range(loc pos)
@@ -191,11 +204,14 @@ vector<loc> HHGame::neighbors(loc player_piece, loc dirs[])
         pos = loc(x + dirX, y + dirY);
         cout << "dir: " << dir.print() << " pos: " << pos.print();
         if (in_range(pos)) {
-            cout << " (in range)" << endl;
+            cout << " (in range)";
             if (pos.x % 2 == 0) pos.y--;
-            cout << " actual pos: " << pos.print() << endl;
-            if (b.get(pos) == NO_PLAYER)
+            cout << " actual pos: " << pos.print();
+            if (b.get(pos) == NO_PLAYER) {
+                cout << " got pushed";
                 vec.push_back(pos);
+            }
+            cout << endl;
         }
     }
     return vec;
@@ -210,6 +226,7 @@ bool HHGame::is_legal_move(MovePlayer *m)
     player p = curr_state._player;
     // check if the move's "from" location holds the current player
     cout << "from loc: " << from.print() << endl;
+    cout << "to loc: " << to.print() << endl;
     if (b.get(from) == p) {
         // check the move's "to" location is a neighbor of the player at the "from" location
         vector<loc> possible_moves = neighbors(from, (p == HOUNDS)?hounds_dirs:hare_dirs);
@@ -222,7 +239,7 @@ bool HHGame::is_legal_move(MovePlayer *m)
 
 void HHGame::make_move(MovePlayer *m)
 {
-    if (!is_legal_move(m)) return;
+    if (!is_legal_move(m)) { throw IllegalMoveError(); return; }
     loc from = m->from_loc;
     loc to = m->to_loc;
     int dirX = to.x - from.x;
@@ -239,20 +256,22 @@ void HHGame::make_move(MovePlayer *m)
     curr_state._board = b;
 
     // update game
-    status s = get_status();
-    status *curr_status = &s;
+    status *curr_status = get_status();
+    cout << "\n\n\n" << curr_status->status_to_string() << endl;
 
-    if (dynamic_cast<Over*>(curr_status)) {
+    if (curr_status->status_to_string().substr(0, 4) == "Over") {
         cout << "in make_move. Game is Over."<<endl;
-        Over *over = (Over*)curr_status;
-        Winner *winner = (Winner*)&(over->_outcome);
+        Over *over = (Over *)(curr_status);
+        Winner *winner = (Winner *)(over->_outcome);
         if (winner->_player == HARE) {
             hare_score++;
         } else {
             hounds_score++;
         }
+        roundIsOver = true;
     } else { // In_play
         cout << "in make_move. Game is In_Play. SWITCHED PLAYER!" << endl;
         switch_player();
     }
+    delete curr_status;
 }

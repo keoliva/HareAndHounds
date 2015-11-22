@@ -1,6 +1,9 @@
 #include "include/draw.h"
 #include <iostream>
+#include <string>
 using namespace std;
+
+string round_num, hare_score, hounds_score, message;
 
 const double z_coord = -6.0;
 const float radius = 0.25f;
@@ -18,7 +21,7 @@ struct Coord {
 };
 Coord vertices[11] = {
   Coord(loc(-1, 1), loc(0, 0)), Coord(loc(0, 1), loc(0, 1)), Coord(loc(1, 1), loc(0, 2)),
-  Coord(loc(-2, 0), loc(1, 0)), Coord(loc(-1, 0), loc(1, 1)), Coord(loc(0, 0), loc(1, 2)), Coord(loc(1, 0), loc(1, 3)), Coord(loc(2, 0), loc(0, 3)),
+  Coord(loc(-2, 0), loc(1, 0)), Coord(loc(-1, 0), loc(1, 1)), Coord(loc(0, 0), loc(1, 2)), Coord(loc(1, 0), loc(1, 3)), Coord(loc(2, 0), loc(1, 4)),
   Coord(loc(-1, -1), loc(2, 0)), Coord(loc(0, -1), loc(2, 1)), Coord(loc(1, -1), loc(2, 2)) };
 
 loc getBoardCoordOfSelection(int index)
@@ -94,8 +97,7 @@ void drawVertices(loc vertex_selected=loc(-1, -1))
         glStencilFunc(GL_ALWAYS, i + 1, -1);
         // outline is drawn red
         if (b_coord.equals(vertex_selected)) {
-
-                glColor3d(1, 0, 0);
+            glColor3d(1, 0, 0);
         }
         if (b_coord.y % 2 == 0) {
             drawCircle(o_coord.x, o_coord.y, radius);
@@ -139,7 +141,7 @@ void drawBoard(void)
 
 void updateText(string message);
 
-void drawGame(loc *selected_coord, string err_message)
+void drawGame(HHGame *game, loc *selected_coord, string err_message)
 {
     glColor3d(1, 1, 1);
     glTranslated(0, 0, z_coord);
@@ -155,10 +157,57 @@ void drawGame(loc *selected_coord, string err_message)
         drawVertices();
     }
 
-
     glLineWidth(0.5);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     drawBoard();
+
+    int hounds_score_int = game->get_hounds_score();
+    int hare_score_int = game->get_hare_score();
+    stringstream ss;
+    ss << "ROUND: " << (game->get_round()) << "/3";
+    round_num = ss.str();
+    ss.str("");
+    ss << "HOUNDS: " << hounds_score_int;
+    hounds_score = ss.str();
+    ss.str("");
+    ss << "HARE: " << hare_score_int;
+    hare_score = ss.str();
+    ss.str("");
+
+    status *curr_status = game->get_status();
+    if (curr_status->status_to_string().substr(0, 4) == "Over") {
+        if (game->gameOver()) {
+            switch ((hounds_score_int < hare_score_int) ? -1 : (hounds_score_int > hare_score_int)) {
+                case -1:
+                    message = "HARE won the game!";
+                    break;
+                case 0:
+                    message = "The game is a draw!";
+                    break;
+                case 1:
+                    message = "HOUNDS won the game!";
+                    break;
+            }
+            err_message = "Press 'r' to start a new game";
+        } else {
+            message = "";
+            Over *over = (Over *)(curr_status);
+            Winner *winner = (Winner *)(over->_outcome);
+            if (winner->_player == HARE) {
+                if (winner->win == ESCAPE)
+                    message = "HARE won by ESCAPING HOUNDS!";
+                else
+                    message = "HARE won by HOUNDS STALLING!";
+            } else {
+                message = "HOUNDS won by TRAPPING HARE!";
+            }
+            err_message += "Press 'r' to start a new round";
+        }
+    } else { // In_Play
+        ss << "It's " << (game->get_player() == HOUNDS?"HOUNDS ":"HARE ") << "turn";
+        message = ss.str();
+    }
+    delete curr_status;
     updateText(err_message);
 }
 
@@ -166,17 +215,18 @@ void *font = GLUT_BITMAP_9_BY_15;
 void setOrthographicProjection(int w, int h);
 void restorePerspectiveProjection(void);
 void renderString(int x, int y, void *font, const char *str, int len);
-void updateText(string message)
+void updateText(string err_message)
 {
     // dimensions of current window
     int window_width = glutGet(GLUT_WINDOW_WIDTH);
     int window_height = glutGet(GLUT_WINDOW_HEIGHT);
     setOrthographicProjection(window_width, window_height);
-    renderString(window_width/5, window_height*6.5/7, font, "ROUND: 1", 8);
-    renderString(window_width/5, window_height/7, font, "YOU: 1", 6);
-    renderString(window_width*3.5/5, window_height/7, font, "OPP: 2", 6);
-    int _size = message.length();
-    renderString(window_width*2.25/5, window_height/7, font, message.c_str(), _size);
+    renderString(window_width/5, window_height*6.5/7, font, round_num.data(), round_num.size());
+    renderString(window_width/5, window_height/7, font, hounds_score.data(), hounds_score.size());
+    renderString(window_width*3.5/5, window_height/7, font, hare_score.data(), hare_score.size());
+
+    renderString(window_width*2.25/5, window_height/7, font, message.data(), message.size());
+    renderString(window_width*2.0/5, window_height/8.5, font, err_message.data(), err_message.size());
     restorePerspectiveProjection();
 }
 void setOrthographicProjection(int w, int h)

@@ -64,22 +64,22 @@ static void display(void)
                 // switch selected coord with this one
                 if (game->get_board().get(coord) == HOUNDS) {
                     selected_coord = coord;
-                    drawGame(&selected_coord);
+                    drawGame(game, &selected_coord);
                 } else {
                      MovePlayer m = MovePlayer(selected_coord, coord);
                     cout << "process of deciding if your move was legal" << endl;
-                    if (game->is_legal_move(&m)) {
+                    try {
                         cout << "move IS LEGAL" <<endl;
                         game->make_move(&m);
                         selection_index = 0;
                         selected_coord = loc(-1, -1);
-                        drawGame();
-                    } else {
+                        drawGame(game);
+                    } catch(IllegalMoveError &e) {
                         cout << "move IS NOT LEGAL" << endl;
                         if (!selected_coord.equals(coord))
                             // keep drawing the player piece highlighted
-                            drawGame(&selected_coord, "HOUNDS can only move to an adjacent spot from left to right or up and down");
-                        else drawGame(&selected_coord);
+                            drawGame(game, &selected_coord, "HOUNDS can only move to an adjacent spot from left to right or up and down");
+                        else drawGame(game, &selected_coord);
                     }
                 }
             } else { // have not clicked a player piece
@@ -87,36 +87,37 @@ static void display(void)
                 if (game->get_board().get(coord) == HOUNDS) {
                     cout<<"place I chose DID have a hound"<<endl;
                     selected_coord = coord;
-                    drawGame(&selected_coord);
+                    drawGame(game, &selected_coord);
                 } else {
                     cout<<"place I chose DID NOT have a hound"<<endl;
-                    selection_index = 0;
-                    drawGame(nullptr, "SELECT a hound to move");
+                    //selection_index = 0;
+                    drawGame(game, nullptr, "SELECT a hound to move");
                 }
             }
         } else { // hare piece doesn't have to be chosen since there's only once, a legal move should've been chosen
             cout << "hiyah i'm a hare"<<endl;
             MovePlayer m = MovePlayer(game->get_hare(), coord);
-            if (game->is_legal_move(&m)) {
+            try {
                 game->make_move(&m);
                 selection_index = 0;
                 // selected_coord is only set if the current player is hounds
-                drawGame();
-            } else {
+                drawGame(game);
+            } catch(IllegalMoveError &e) {
                 // keep drawing the player piece highlighted
-                selection_index = 0;
-                drawGame(nullptr, "HARE can move in any direction, as long as it's adjacent to it");
+                // commented out since I want the error message to stay
+                //selection_index = 0;
+                drawGame(game, nullptr, "HARE can move in any direction, as long as it's adjacent to it");
             }
         }
     } else {
-        drawGame(&selected_coord);
+        drawGame(game, &selected_coord);
     }
     glutSwapBuffers();
 }
 
 static void mouseButton(int button, int state, int x, int y)
 {
-    if (button != GLUT_LEFT_BUTTON || state != GLUT_DOWN) return;
+    if (button != GLUT_LEFT_BUTTON || state != GLUT_DOWN || game->roundOver()) return;
     cout << "mouse at (" << x << ", " << y << ")" << endl;
     int window_height = glutGet(GLUT_WINDOW_HEIGHT);
 
@@ -140,8 +141,13 @@ static void key(unsigned char key, int x, int y)
         break;
 
     case 'r':
+        if (game->roundOver()) {
+            game->restart();
+            glutPostRedisplay();
+        }
         break;
     }
+
 }
 
 static void idle(void)
@@ -175,7 +181,7 @@ int main(int argc, char *argv[])
     glutDisplayFunc(display);
     glutMouseFunc(mouseButton);
     glutKeyboardFunc(key);
-    glutIdleFunc(idle);
+    //glutIdleFunc(idle);
 
     init();
 
