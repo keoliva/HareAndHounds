@@ -98,7 +98,6 @@ class HHGame {
     bool roundIsOver;
     state curr_state;
     void init_state();
-    void switch_player();
     bool is_legal_move(MovePlayer *m);
     std::vector<loc> neighbors(loc player_piece, loc dirs[]);
   public:
@@ -114,6 +113,7 @@ class HHGame {
     player get_player();
     board get_board();
     status *get_status();
+    void switch_player();
     void make_move(MovePlayer *m);
 };
 

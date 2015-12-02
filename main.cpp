@@ -11,27 +11,32 @@
  * number of geometry stacks and slices can be adjusted
  * using the + and - keys.
  */
-
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
-#include <GL/gl.h>
-#include <GL/glut.h>
+#define GLEW_STATIC 1
+#include <GL/glew.h>
+
 #endif
 
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <glm/glm.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include "include/draw.h"
-
+#include "include/Obj.h"
 using namespace std;
 
 HHGame *game;
-
+Obj hounds = Obj(HOUNDS);
+char ch = '1';
 int selection_index = 0;
+float z = -6.0f;
+float _angle = 0.0;
+float y_angle = 0.0;
 loc selected_coord = loc(-1, -1);
 
 /* GLUT callback Handlers */
@@ -54,7 +59,25 @@ static void display(void)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    if (selection_index) { // something was just clicked
+    glTranslated(0, 0, z);
+
+    // add positioned light
+    GLfloat ambientColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
+    GLfloat lightColor0[] = {0.5f, 0.5f, 0.5f, 1.0f};
+    GLfloat lightPos0[] = {4.0f, 0.0f, 8.0f, 1.0f};
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
+
+    // add directed light
+    GLfloat lightColor1[] = {0.5f, 0.2f, 0.2f, 1.0f};
+    // coming from direction (-1, 0.5, 0.5)
+    GLfloat lightPos1[] = {-1.0f, 0.5f, 0.5f, 0.0f}; // last elem represents light is directed, not positioned
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, lightColor1);
+    glLightfv(GL_LIGHT1, GL_POSITION, lightPos1);
+
+    hounds.draw(z, _angle, y_angle);
+    /**if (selection_index) { // something was just clicked
         loc coord = getBoardCoordOfSelection(selection_index);
         cout << "selected: " << coord.print() << endl;
         cout << "current_player: " << ((game->get_player() == HOUNDS)?"HOUNDS":"HARE") << endl;
@@ -111,7 +134,7 @@ static void display(void)
         }
     } else {
         drawGame(game, &selected_coord);
-    }
+    }*/
     glutSwapBuffers();
 }
 
@@ -139,7 +162,24 @@ static void key(unsigned char key, int x, int y)
         delete game;
         exit(0);
         break;
-
+    case 'a':
+        z -= 1.0f;
+        break;
+    case 'b':
+        z += 1.0f;
+        break;
+    case 'd':
+        _angle += 1.0;
+        break;
+    case 'c':
+        _angle -= 1.0;
+        break;
+    case 'e':
+        y_angle -= 1.0;
+        break;
+    case 'f':
+        y_angle += 1.0;
+        break;
     case 'r':
         if (game->roundOver()) {
             game->restart();
@@ -147,7 +187,10 @@ static void key(unsigned char key, int x, int y)
         }
         break;
     }
-
+    cout << "y_angle: " << y_angle << endl;
+    cout << "_angle: " << _angle << endl;
+    cout << "z: " << z << endl;
+    glutPostRedisplay();
 }
 
 static void idle(void)
@@ -165,8 +208,6 @@ void init(void)
     game = new HHGame();
 }
 
-/* Program entry point */
-
 int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
@@ -179,13 +220,24 @@ int main(int argc, char *argv[])
 
     glutReshapeFunc(resize);
     glutDisplayFunc(display);
-    glutMouseFunc(mouseButton);
+    //glutMouseFunc(mouseButton);
     glutKeyboardFunc(key);
-    //glutIdleFunc(idle);
+    glutIdleFunc(idle);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_LIGHTING); // enable lighting
+    glEnable(GL_LIGHT0); // enable light #0
+    glEnable(GL_LIGHT1); // enable light #1
+    glEnable(GL_NORMALIZE); // automatically normalize normals
 
-    init();
+    //glEnable(GL_SMOOTH);
+    //init();*/
+    //cout << "Writing hare.cpp.." << endl;
+    //Obj obj = Obj("resources/the_hounds.obj", HOUNDS);
+    //cout << "finished writing hare.cpp..." << endl;
+    hounds.loadObj();
 
     glutMainLoop();
-
     return EXIT_SUCCESS;
 }

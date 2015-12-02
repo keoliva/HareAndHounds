@@ -3,7 +3,8 @@
 #include <string>
 using namespace std;
 
-string round_num, hare_score, hounds_score, message;
+string round_num, hare_score, hounds_score, message, game_over_msg;
+bool gameOver = false;
 
 const double z_coord = -6.0;
 const float radius = 0.25f;
@@ -176,32 +177,32 @@ void drawGame(HHGame *game, loc *selected_coord, string err_message)
 
     status *curr_status = game->get_status();
     if (curr_status->status_to_string().substr(0, 4) == "Over") {
+        Over *over = (Over *)(curr_status);
+        Winner *winner = (Winner *)(over->_outcome);
+        if (winner->_player == HARE) {
+            if (winner->win == ESCAPE)
+                message = "HARE won by ESCAPING HOUNDS!";
+            else
+                message = "HARE won by HOUNDS STALLING!";
+        } else {
+            message = "HOUNDS won by TRAPPING HARE!";
+        }
         if (game->gameOver()) {
+            gameOver = true;
             switch ((hounds_score_int < hare_score_int) ? -1 : (hounds_score_int > hare_score_int)) {
                 case -1:
-                    message = "HARE won the game!";
+                    game_over_msg = "HARE won the game!";
                     break;
                 case 0:
-                    message = "The game is a draw!";
+                    game_over_msg = "The game is a draw!";
                     break;
                 case 1:
-                    message = "HOUNDS won the game!";
+                    game_over_msg = "HOUNDS won the game!";
                     break;
             }
             err_message = "Press 'r' to start a new game";
         } else {
-            message = "";
-            Over *over = (Over *)(curr_status);
-            Winner *winner = (Winner *)(over->_outcome);
-            if (winner->_player == HARE) {
-                if (winner->win == ESCAPE)
-                    message = "HARE won by ESCAPING HOUNDS!";
-                else
-                    message = "HARE won by HOUNDS STALLING!";
-            } else {
-                message = "HOUNDS won by TRAPPING HARE!";
-            }
-            err_message += "Press 'r' to start a new round";
+            err_message = "Press 'r' to start a new round";
         }
     } else { // In_Play
         ss << "It's " << (game->get_player() == HOUNDS?"HOUNDS ":"HARE ") << "turn";
@@ -212,9 +213,13 @@ void drawGame(HHGame *game, loc *selected_coord, string err_message)
 }
 
 void *font = GLUT_BITMAP_9_BY_15;
+/** got the following two functions from tutorial at:
+http://www.lighthouse3d.com/tutorials/glut-tutorial/bitmap-fonts-and-orthogonal-projections/
+*/
 void setOrthographicProjection(int w, int h);
 void restorePerspectiveProjection(void);
-void renderString(int x, int y, void *font, const char *str, int len);
+void renderString(float x, float y, void *font, const char *str, int len);
+void drawGameOver();
 void updateText(string err_message)
 {
     // dimensions of current window
@@ -222,11 +227,19 @@ void updateText(string err_message)
     int window_height = glutGet(GLUT_WINDOW_HEIGHT);
     setOrthographicProjection(window_width, window_height);
     renderString(window_width/5, window_height*6.5/7, font, round_num.data(), round_num.size());
-    renderString(window_width/5, window_height/7, font, hounds_score.data(), hounds_score.size());
-    renderString(window_width*3.5/5, window_height/7, font, hare_score.data(), hare_score.size());
+    renderString(window_width/5, window_height*6/7, font, hounds_score.data(), hounds_score.size());
+    renderString(window_width*3.5/5, window_height*6/7, font, hare_score.data(), hare_score.size());
 
-    renderString(window_width*2.25/5, window_height/7, font, message.data(), message.size());
-    renderString(window_width*2.0/5, window_height/8.5, font, err_message.data(), err_message.size());
+    if (gameOver) {
+        drawGameOver();
+        gameOver = false;
+    }
+
+    const unsigned char *msg = (const unsigned char *)message.c_str();
+    const unsigned char *err_msg = (const unsigned char *)err_message.c_str();
+    int msg_width = glutBitmapLength(font, msg), err_msg_width = glutBitmapLength(font, err_msg);
+    renderString((window_width-msg_width)/2.0, window_height/7, font, message.data(), message.size());
+    renderString((window_width-err_msg_width)/2.0, window_height/8.5, font, err_message.data(), err_message.size());
     restorePerspectiveProjection();
 }
 void setOrthographicProjection(int w, int h)
@@ -255,11 +268,35 @@ void restorePerspectiveProjection(void)
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 }
-void renderString(int x, int y, void *font, const char *str, int len)
+void renderString(float x, float y, void *font, const char *str, int len)
 {
-    glRasterPos2i(x, y);
+    glRasterPos2f(x, y);
     for (int i = 0; i < len; i++)
     {
         glutBitmapCharacter(font, str[i]);
     }
+}
+
+void drawGameOver(void)
+{
+    int window_width = glutGet(GLUT_WINDOW_WIDTH);
+    int window_height = glutGet(GLUT_WINDOW_HEIGHT);
+
+    const unsigned char *title = (const unsigned char *)"GAME OVER", *msg = (const unsigned char *)game_over_msg.c_str();
+    int title_len = glutBitmapLength(font, title);
+    int msg_len = glutBitmapLength(font, msg);
+    int height = glutBitmapWidth(font, title[0]);
+    cout << "HEIGHT: " << height << endl;
+
+    glColor3d(0, 1, 0); // green text
+    renderString((window_width - title_len)/2.0, window_height/2 + height, font, "GAME OVER", 9);
+    glColor3d(1, 1, 1); // white text
+    renderString((window_width - msg_len)/2.0, window_height/2 - height, font, game_over_msg.data(), game_over_msg.size());
+
+    int y = window_height/2;
+    glColor3d(1, 0, 0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glRectd(0, y-(3*height), window_width, y+(3*height));
+
+    glColor3d(1, 1, 1); // set color back to white
 }

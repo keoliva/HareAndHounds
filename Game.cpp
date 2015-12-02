@@ -39,7 +39,7 @@ void HHGame::restart(void)
     turns = 0;
     hounds_vertical_moves = 0;
     if (gameOver()) {
-        rounds %= 3; // since gameOver() is true, rounds % 3 == 0
+        rounds %= 3; // since gameOver() is true, rounds == 3 so rounds % 3 == 0
         hounds_score = 0;
         hare_score = 0;
     }
