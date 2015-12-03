@@ -1,40 +1,25 @@
 /*
- * GLUT Shapes Demo
+ * Hare and Hounds
  *
- * Written by Nigel Stewart November 2003
+ * Written by Kayla Oliva November 2015
  *
- * This program is test harness for the sphere, cone
- * and torus shapes in GLUT.
- *
- * Spinning wireframe and smooth shaded shapes are
- * displayed until the ESC or q key is pressed.  The
- * number of geometry stacks and slices can be adjusted
- * using the + and - keys.
+ * A human-to-human rendition of the game Hare and Hounds.
+ * My prompt is a python homework assignment from my first
+ * programming class at CMU.
+ * Rules I implemented come from the Wikipedia page on the game:
+ * https://en.wikipedia.org/wiki/Hare_games#Hare_and_Hounds
  */
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
 #include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glut.h>
 #endif
 
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include <stdio.h>
-#include <glm/glm.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 #include "include/draw.h"
-using namespace std;
 
 HHGame *game;
 Draw *draw;
-float z = -6.0f;
 int selection_index = 0;
-float _angle = 0.0;
-float y_angle = 0.0;
 loc selected_coord = loc(-1, -1);
 
 /* GLUT callback Handlers */
@@ -51,26 +36,11 @@ static void resize(int width, int height)
 
 static void display(void)
 {
-    glClearStencil(0); // this is the default value
+    glClearStencil(0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     // reset transformations
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
-    // add positioned light
-    GLfloat ambient[] = { 0.75f,0.75f, 0.75f, 1.0 };
-    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-    /**GLfloat lightColor0[] = {0.5f, 0.5f, 0.5f, 1.0f};
-    GLfloat lightPos0[] = {4.0f, 0.0f, 8.0f, 1.0f};
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
-
-    // add directed light
-    GLfloat lightColor1[] = {0.5f, 0.2f, 0.2f, 1.0f};
-    // coming from direction (-1, 0.5, 0.5)
-    GLfloat lightPos1[] = {-1.0f, 0.5f, 0.5f, 0.0f}; // last elem represents light is directed, not positioned
-    glLightfv(GL_LIGHT1, GL_DIFFUSE, lightColor1);
-    glLightfv(GL_LIGHT1, GL_POSITION, lightPos1);*/
 
     if (selection_index) { // something was just clicked
         loc coord = draw->getBoardCoordOfSelection(selection_index);
@@ -146,24 +116,6 @@ static void key(unsigned char key, int x, int y)
         delete draw;
         exit(0);
         break;
-    case 'a':
-        z -= 1.0f;
-        break;
-    case 'b':
-        z += 1.0f;
-        break;
-    case 'd':
-        _angle += 1.0;
-        break;
-    case 'c':
-        _angle -= 1.0;
-        break;
-    case 'e':
-        y_angle -= 1.0;
-        break;
-    case 'f':
-        y_angle += 1.0;
-        break;
     case 'r':
         if (game->roundOver()) {
             game->restart();
@@ -171,12 +123,6 @@ static void key(unsigned char key, int x, int y)
         }
         break;
     }
-    glutPostRedisplay();
-}
-
-static void idle(void)
-{
-    glutPostRedisplay();
 }
 
 void init(void)
@@ -187,9 +133,8 @@ void init(void)
     glEnable(GL_LIGHTING); // enable lighting
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_LIGHT0); // enable light #0
- // enable light #1
-    //glEnable(GL_NORMALIZE); // automatically normalize normals*/
-    glEnable(GL_SMOOTH);
+    GLfloat ambient[] = { 0.75f, 0.75f, 0.75f, 1.0 };
+    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
 
     game = new HHGame();
     draw = new Draw();
@@ -208,10 +153,8 @@ int main(int argc, char *argv[])
     glutDisplayFunc(display);
     glutMouseFunc(mouseButton);
     glutKeyboardFunc(key);
-    //glutIdleFunc(idle);
     init();
-    //Obj *hare = new Obj("resources/the_hare.obj", HARE);
-    //delete hare;
+
     glutMainLoop();
     return EXIT_SUCCESS;
 }

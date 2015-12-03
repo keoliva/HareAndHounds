@@ -1,9 +1,9 @@
 #include "Obj.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+
 #include <fstream>
 #include <iostream>
+#include <cstring> /* strerror, memcpy */
+#include <stdlib.h> /* exit */
 #include "include/hounds.h"
 #include "include/hare.h"
 #define COORD 3
@@ -24,9 +24,6 @@ Obj::Obj(player p)
     init(p);
 }
 
-// returns a Model object with a count of the obj's
-// vertices, normals, faces, and
-// the coordinates for each in a coor object
 Model Obj::extractObjData(char *path) {
     ifstream inObj(path, ios::in);
     if (!inObj.good()) {
@@ -44,19 +41,16 @@ Model Obj::extractObjData(char *path) {
         if (type.compare("v ") == 0) {
             sscanf(l, "v %f %f %f", &x, &y, &z);
             model.vertices.push_back(coord(x, y, z));
-            model.verticesNum++;
         } else if (type.compare("vn") == 0) {
             sscanf(l, "vn %f %f %f", &x, &y, &z);
             model.normals.push_back(coord(x, y, z));
-            model.normalsNum++;
         } else if (type.compare("f ") == 0) {
             face currFace;
             int a, b, c, d, e, f;
-            // REQUIRE obj to be triangulated
-            // also faces format is : Vertex Normal Indices Without Texture Coordinate Indices
-            //sscanf(l, "f %d//%d %d//%d %d//%d", &a, &b, &c, &d, &e, &f);
+            // REQUIRE obj to be triangulated so format of faces is
+            // Vertex-Normal Indices Without Texture Coordinate Indices
             sscanf(l, "f %d//%d %d//%d %d//%d", &a, &b, &c, &d, &e, &f);
-            // a-f are indices starting from 1
+            // v0-v2, n0-n2 are indices references starting from 1
             currFace.vertices[0] = model.vertices[a - 1];
             currFace.normals[0] = model.normals[b - 1];
             currFace.vertices[1] = model.vertices[c - 1];
@@ -126,11 +120,11 @@ void Obj::loadObj()
     {
         glPushMatrix();
         glBegin(GL_TRIANGLES);
-            int _size = (_player == HOUNDS) ? hounds::indicesNum * COORD : hare::indicesNum * COORD;
+            int _size = (_player == HOUNDS) ? hounds::indicesNum*COORD : hare::indicesNum*COORD;
             float vx, vy, vz, nx, ny, nz;
-            // _size is the length of normals and vertices
-            for (int i = 0; i < _size; i+=9) {
-                for (int j = i; j < (i + 9); j+=3) {
+            // every 9 elements represents the xyz-coordinates of the three vertices/normals of a face
+            for (int i = 0; i < _size; i+=(COORD*3)) { // COORD*3 = 9
+                for (int j = i; j < (i + 9); j+=COORD) {
                     if (_player == HOUNDS) {
                         vx = hounds::vertices[j]; vy = hounds::vertices[j+1]; vz = hounds::vertices[j+2];
                         nx = hounds::normals[j]; ny = hounds::normals[j+1]; nz = hounds::normals[j+2];

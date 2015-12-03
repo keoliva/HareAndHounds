@@ -39,7 +39,7 @@ struct Coord {
         return ss.str();
     };
 };
-Coord vertices[11] = {
+static Coord vertices[11] = {
   Coord(loc(-1, 1), loc(0, 0)), Coord(loc(0, 1), loc(0, 1)), Coord(loc(1, 1), loc(0, 2)),
   Coord(loc(-2, 0), loc(1, 0)), Coord(loc(-1, 0), loc(1, 1)), Coord(loc(0, 0), loc(1, 2)), Coord(loc(1, 0), loc(1, 3)), Coord(loc(2, 0), loc(1, 4)),
   Coord(loc(-1, -1), loc(2, 0)), Coord(loc(0, -1), loc(2, 1)), Coord(loc(1, -1), loc(2, 2)) };
@@ -308,7 +308,7 @@ void drawGameOver(void)
     const unsigned char *title = (const unsigned char *)"GAME OVER", *msg = (const unsigned char *)game_over_msg.c_str();
     int title_len = glutBitmapLength(font, title);
     int msg_len = glutBitmapLength(font, msg);
-    int height = glutBitmapWidth(font, title[0]);
+    int height = glutBitmapWidth(font, title[0]); // height of font
 
     glColor3d(0, 1, 0); // green text
     renderString((window_width - title_len)/2.0, window_height/2 + height, font, "GAME OVER", 9);
@@ -316,6 +316,7 @@ void drawGameOver(void)
     renderString((window_width - msg_len)/2.0, window_height/2 - height, font, game_over_msg.data(), game_over_msg.size());
 
     int y = window_height/2;
+    // red rectangle
     glColor3d(1, 0, 0);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glRectd(0, y-(3*height), window_width, y+(3*height));

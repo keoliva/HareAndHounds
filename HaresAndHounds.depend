@@ -228,18 +228,9 @@
 1419773313 c:\mingw\include\math.h
 	<_mingw.h>
 
-1449116068 source:c:\users\kayla\documents\quarto\haresandhounds\main.cpp
+1449151602 source:c:\users\kayla\documents\quarto\haresandhounds\main.cpp
 	<GLUT/glut.h>
 	<GL/gl.h>
-	<GL/glu.h>
-	<GL/glut.h>
-	<stdlib.h>
-	<iostream>
-	<fstream>
-	<stdio.h>
-	<glm/glm.hpp>
-	<glm/vec3.hpp>
-	<glm/vec4.hpp>
 	"include/draw.h"
 
 1419773313 c:\mingw\include\stdio.h
@@ -645,7 +636,7 @@
 	<intrin.h>
 	<limits>
 
-1449108548 c:\users\kayla\documents\quarto\haresandhounds\include\draw.h
+1449151565 c:\users\kayla\documents\quarto\haresandhounds\include\draw.h
 	<windows.h>
 	<GLUT/glut.h>
 	<GL/glut.h>
@@ -654,18 +645,18 @@
 	<math.h>
 	<sstream>
 
-1449116408 source:c:\users\kayla\documents\quarto\haresandhounds\draw.cpp
+1449150920 source:c:\users\kayla\documents\quarto\haresandhounds\draw.cpp
 	"include/draw.h"
 	<iostream>
 	<string>
 
-1449119370 c:\users\kayla\documents\quarto\haresandhounds\include\game.h
+1449151527 c:\users\kayla\documents\quarto\haresandhounds\include\game.h
+	<sstream>
 	<iostream>
 	<string>
 	<vector>
-	<sstream>
 
-1449119336 source:c:\users\kayla\documents\quarto\haresandhounds\game.cpp
+1449150074 source:c:\users\kayla\documents\quarto\haresandhounds\game.cpp
 	"include/Game.h"
 
 1448322504 source:c:\users\kayla\documents\quarto\haresandhounds\hound.c
@@ -712,17 +703,16 @@
 	<fstream>
 	<iostream>
 
-1449111105 c:\users\kayla\documents\quarto\haresandhounds\include\obj.h
+1449151898 c:\users\kayla\documents\quarto\haresandhounds\include\obj.h
 	"Game.h"
 	<GL/gl.h>
 
-1449116393 source:c:\users\kayla\documents\quarto\haresandhounds\obj.cpp
+1449151527 source:c:\users\kayla\documents\quarto\haresandhounds\obj.cpp
 	"Obj.h"
-	<stdlib.h>
-	<stdio.h>
-	<string.h>
 	<fstream>
 	<iostream>
+	<cstring>
+	<stdlib.h>
 	"include/hounds.h"
 	"include/hare.h"
 

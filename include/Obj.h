@@ -9,13 +9,14 @@ typedef struct coord {
     coord(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {};
 } coord;
 // in this project, obj files are being exported where texture is not included
+// and the faces are triangulated
 typedef struct face {
     coord vertices[3];
     coord normals[3];
 } face;
 
 typedef struct Model {
-    int verticesNum, positionsNum, normalsNum, facesNum, indicesNum;
+    int facesNum, indicesNum;
     std::vector<coord> vertices, normals;
     std::vector<face> faces;
 } Model;
@@ -26,7 +27,6 @@ class Obj
         Obj() {};
         Obj(player p);
         Obj(char *path, player p);
-        inline static Obj &instance(void) { static Obj singleton; return singleton; };
         void loadObj();
         void draw(float x, float y);
         virtual ~Obj();

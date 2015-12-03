@@ -1,13 +1,10 @@
 #ifndef GAME_H_INCLUDED
 #define GAME_H_INCLUDED
 
-#define ROWS 3
-#define NUM_PLAYERS 2
-
+#include <sstream>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <sstream>
 
 enum player {
     NO_PLAYER, HOUNDS, HARE
@@ -94,7 +91,7 @@ class MovePlayer : public gameMove {
 
 struct IllegalMoveError : public std::exception {};
 class HHGame {
-    int rounds, hare_score, hounds_score, turns, hounds_vertical_moves; // in a row
+    int rounds, hare_score, hounds_score, hounds_vertical_moves;
     bool roundIsOver;
     state curr_state;
     void init_state();

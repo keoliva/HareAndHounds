@@ -27,7 +27,6 @@ HHGame::HHGame() {
     roundIsOver = false;
     hounds_score = 0;
     hare_score = 0;
-    turns = 0;
     hounds_vertical_moves = 0;
     init_state();
 }
@@ -36,7 +35,6 @@ void HHGame::restart(void)
 {
     rounds++;
     roundIsOver = false;
-    turns = 0;
     hounds_vertical_moves = 0;
     if (gameOver()) {
         rounds %= 3; // since gameOver() is true, rounds == 3 so rounds % 3 == 0
@@ -48,9 +46,9 @@ void HHGame::restart(void)
 void HHGame::init_state()
 {
     vector<vector<player>> vec = {
-        { HOUNDS, NO_PLAYER, NO_PLAYER },
-        { HOUNDS, NO_PLAYER, NO_PLAYER, NO_PLAYER, HARE },
-        { HOUNDS, NO_PLAYER, NO_PLAYER }
+            { HOUNDS, NO_PLAYER, NO_PLAYER },
+    { HOUNDS, NO_PLAYER, NO_PLAYER, NO_PLAYER, HARE },
+            { HOUNDS, NO_PLAYER, NO_PLAYER }
     };
 
     curr_state._board = board(vec);
