@@ -3,6 +3,25 @@
 #include <string>
 using namespace std;
 
+Obj &Draw::initPlayerPiece(player p)
+{
+    Obj *h = new Obj(p);
+    return *h;
+}
+Draw::Draw() {
+
+    hare = initPlayerPiece(HARE);
+    hounds = initPlayerPiece(HOUNDS);
+
+    hounds.loadObj();
+    hare.loadObj();
+}
+
+Draw::~Draw() {
+    delete &hounds;
+    delete &hare;
+}
+
 string round_num, hare_score, hounds_score, message, game_over_msg;
 bool gameOver = false;
 
@@ -25,7 +44,7 @@ Coord vertices[11] = {
   Coord(loc(-2, 0), loc(1, 0)), Coord(loc(-1, 0), loc(1, 1)), Coord(loc(0, 0), loc(1, 2)), Coord(loc(1, 0), loc(1, 3)), Coord(loc(2, 0), loc(1, 4)),
   Coord(loc(-1, -1), loc(2, 0)), Coord(loc(0, -1), loc(2, 1)), Coord(loc(1, -1), loc(2, 2)) };
 
-loc getBoardCoordOfSelection(int index)
+loc Draw::getBoardCoordOfSelection(int index)
 {
     return vertices[index - 1].boardCoord;
 }
@@ -84,7 +103,7 @@ void drawCircle(float cx, float cy, float radius)
     glColor3d(1, 1, 1);
     glFrontFace(GL_CCW);
 }
-void drawVertices(loc vertex_selected=loc(-1, -1))
+void Draw::drawVertices(board gameBoard, loc vertex_selected)
 {
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -105,6 +124,10 @@ void drawVertices(loc vertex_selected=loc(-1, -1))
         } else {
             drawSquare(o_coord.x, o_coord.y, radius*2);
         }
+        if (gameBoard.get(b_coord) == HOUNDS)
+            hounds.draw(o_coord.x, o_coord.y);
+        else if (gameBoard.get(b_coord) == HARE)
+            hare.draw(o_coord.x, o_coord.y);
     }
 }
 
@@ -142,7 +165,7 @@ void drawBoard(void)
 
 void updateText(string message);
 
-void drawGame(HHGame *game, loc *selected_coord, string err_message)
+void Draw::drawGame(HHGame *game, loc *selected_coord, string err_message)
 {
     glColor3d(1, 1, 1);
     glTranslated(0, 0, z_coord);
@@ -153,9 +176,9 @@ void drawGame(HHGame *game, loc *selected_coord, string err_message)
     // draw place mats at vertices on board
 
     if (selected_coord) {
-        drawVertices(*selected_coord);
+        drawVertices(game->get_board(), *selected_coord);
     } else {
-        drawVertices();
+        drawVertices(game->get_board());
     }
 
     glLineWidth(0.5);
@@ -286,7 +309,6 @@ void drawGameOver(void)
     int title_len = glutBitmapLength(font, title);
     int msg_len = glutBitmapLength(font, msg);
     int height = glutBitmapWidth(font, title[0]);
-    cout << "HEIGHT: " << height << endl;
 
     glColor3d(0, 1, 0); // green text
     renderString((window_width - title_len)/2.0, window_height/2 + height, font, "GAME OVER", 9);

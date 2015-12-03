@@ -1,9 +1,7 @@
 #ifndef OBJ_H
 #define OBJ_H
-#include <GL/glew.h>
 #include "Game.h"
-
-
+#include <GL/gl.h>
 
 typedef struct coord {
     float x, y, z;
@@ -11,15 +9,9 @@ typedef struct coord {
     coord(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {};
 } coord;
 // in this project, obj files are being exported where texture is not included
-typedef struct face_vertex {
-    coord vertex;
-    coord normal;
-    face_vertex() {};
-    face_vertex(coord _vertex, coord _normal) : vertex(_vertex), normal(_normal) {};
-} face_vertex;
 typedef struct face {
-    std::vector<face_vertex> vertices;
-    void addVertex(face_vertex v) { vertices.push_back(v); };
+    coord vertices[3];
+    coord normals[3];
 } face;
 
 typedef struct Model {
@@ -31,17 +23,19 @@ typedef struct Model {
 class Obj
 {
     public:
+        Obj() {};
         Obj(player p);
         Obj(char *path, player p);
-
+        inline static Obj &instance(void) { static Obj singleton; return singleton; };
         void loadObj();
-        void draw(float z, float _angle, float y_angle);
+        void draw(float x, float y);
         virtual ~Obj();
     private:
+        int model;
         std::vector<coord> vertices, normals;
         int indicesNum;
         player _player;
-        GLuint model;
+
         void init(player p);
         Model extractObjData(char *path);
         void parseData(char *path);

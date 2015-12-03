@@ -5,17 +5,14 @@
 #include <fstream>
 #include <iostream>
 #include "include/hounds.h"
+#include "include/hare.h"
 #define COORD 3
 using namespace std;
 
 void Obj::init(player p)
 {
     _player = p;
-    if (_player == HOUNDS) {
-        model = glGenLists(1);
-    } else { // otherwise, HARE is passed
-        model = glGenLists(2);
-    }
+    model = glGenLists(2);
 }
 Obj::Obj(char *path, player p)
 {
@@ -60,11 +57,12 @@ Model Obj::extractObjData(char *path) {
             //sscanf(l, "f %d//%d %d//%d %d//%d", &a, &b, &c, &d, &e, &f);
             sscanf(l, "f %d//%d %d//%d %d//%d", &a, &b, &c, &d, &e, &f);
             // a-f are indices starting from 1
-            face_vertex v0, v1, v2;
-            v0 = face_vertex(model.vertices[a - 1], model.normals[b - 1]);
-            v1 = face_vertex(model.vertices[c - 1], model.normals[d - 1]);
-            v2 = face_vertex(model.vertices[e - 1], model.normals[f - 1]);
-            currFace.addVertex(v0); currFace.addVertex(v1); currFace.addVertex(v2);
+            currFace.vertices[0] = model.vertices[a - 1];
+            currFace.normals[0] = model.normals[b - 1];
+            currFace.vertices[1] = model.vertices[c - 1];
+            currFace.normals[1] = model.normals[d - 1];
+            currFace.vertices[2] = model.vertices[e - 1];
+            currFace.normals[2] = model.normals[f - 1];
             model.faces.push_back(currFace);
             model.facesNum++;
         } else { continue; }
@@ -79,13 +77,10 @@ void Obj::parseData(char *path)
     Model model = extractObjData(path);
     this->indicesNum = model.indicesNum;
     for (face _face : model.faces) {
-        for(face_vertex fv : _face.vertices) {
-            coord fv_v = fv.vertex;
-            coord fv_n = fv.normal;
+        for(int i = 0; i < 3; i++) {
+            this->vertices.push_back(_face.vertices[i]);
 
-            this->vertices.push_back(fv_v);
-
-            this->normals.push_back(fv_n);
+            this->normals.push_back(_face.normals[i]);
         }
     }
     if (_player == HOUNDS) {
@@ -94,7 +89,6 @@ void Obj::parseData(char *path)
         writeH("include/hare.h", "hare", model);
     }
 }
-
 void Obj::writeH(std::string fp, std::string nameObj, Model model)
 {
     ofstream outH(fp, ios::out);
@@ -105,7 +99,7 @@ void Obj::writeH(std::string fp, std::string nameObj, Model model)
     outH << "// This is a .cpp file for the model: " << nameObj << endl;
     outH << endl;
 
-    outH << "// Faces: " << model.faces.size() << endl;
+    outH << "// Faces: " << model.facesNum << endl;
     outH << "// Number of Indices: " << model.indicesNum << endl;
 
     outH << "namespace " << nameObj << endl;
@@ -127,16 +121,25 @@ void Obj::writeH(std::string fp, std::string nameObj, Model model)
 
 void Obj::loadObj()
 {
-    glNewList(model, GL_COMPILE);
+    GLuint num = (_player == HOUNDS) ? model : model+1;
+    glNewList(num, GL_COMPILE);
     {
         glPushMatrix();
         glBegin(GL_TRIANGLES);
-            int _size = hounds::indicesNum * COORD;
+            int _size = (_player == HOUNDS) ? hounds::indicesNum * COORD : hare::indicesNum * COORD;
+            float vx, vy, vz, nx, ny, nz;
             // _size is the length of normals and vertices
             for (int i = 0; i < _size; i+=9) {
                 for (int j = i; j < (i + 9); j+=3) {
-                    glNormal3f(hounds::normals[j], hounds::normals[j+1], hounds::normals[j+1]);
-                    glVertex3f(hounds::vertices[j], hounds::vertices[j+1], hounds::vertices[j+1]);
+                    if (_player == HOUNDS) {
+                        vx = hounds::vertices[j]; vy = hounds::vertices[j+1]; vz = hounds::vertices[j+2];
+                        nx = hounds::normals[j]; ny = hounds::normals[j+1]; nz = hounds::normals[j+2];
+                    } else { // HARE is passed
+                        vx = hare::vertices[j]; vy = hare::vertices[j+1]; vz = hare::vertices[j+2];
+                        nx = hare::normals[j]; ny = hare::normals[j+1]; nz = hare::normals[j+2];
+                    }
+                    glNormal3f(nx, ny, nz);
+                    glVertex3f(vx, vy, vz);
                 }
             }
         glEnd();
@@ -145,25 +148,20 @@ void Obj::loadObj()
     glEndList();
 }
 
-void Obj::draw(float z, float _angle, float y_angle)
+void Obj::draw(float x, float y)
 {
     glPushMatrix();
-    glTranslated(0, 0, z);
-    glColor3f(1.0, 0.23, 0.27);
-    glRotatef(_angle, 0, 1, 0);
-    glRotated(y_angle, 1, 0, 0);
-    glCallList(model);
+    glTranslatef(x, y, 0);
+    glRotatef(180, 0, 1, 0);
+    if (_player == HOUNDS) {
+        glColor3f(66/255.0, 24/255.0, 5/255.0);
+        glCallList(model);
+    } else {
+        glColor3f(241/255.0, 236/255.0, 214/255.0);
+        glCallList(model+1);
+    }
     glPopMatrix();
-    /**glPushMatrix();
-        glEnableClientState(GL_VERTEX_ARRAY);
-            glEnableClientState(GL_NORMAL_ARRAY);
-                glVertexPointer(3, GL_FLOAT, 0, this->vertices);
-                glNormalPointer(GL_FLOAT, 0, this->normals);
-
-                glDrawElements(GL_TRIANGLES, this->indicesNum, GL_UNSIGNED_SHORT, this->indices);
-            glDisableClientState(GL_NORMAL_ARRAY);
-        glDisableClientState(GL_VERTEX_ARRAY);
-    glPopMatrix();*/
+    glColor3d(1, 1, 1);
 }
 
 Obj::~Obj()

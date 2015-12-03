@@ -58,9 +58,7 @@ void HHGame::init_state()
 }
 void HHGame::switch_player()
 {
-    cout << "switching player...";
     curr_state._player = (get_player() == HOUNDS)?HARE:HOUNDS;
-    cout << "current player is now... " << ((get_player() == HOUNDS)?"HOUNDS":"HARE")<<endl;
 }
 
 player HHGame::get_player()
@@ -148,12 +146,11 @@ status *HHGame::get_status()
     delete[] hounds;
     if (hare.x % 2 == 0) hare.y--; // reset the y coordinate
     if (hare_escapes) {
-        cout << "HARE ESCAPED!";
         Over *over = new Over(new Winner(HARE, ESCAPE));
         return over;
     }
     // hounds win if hare cannot escape
-    vector<loc> hare_possible_moves = neighbors(hare, hare_dirs);
+    vector<loc> hare_possible_moves = neighbors(HARE, hare, hare_dirs);
     if (hare_possible_moves.size() == 0) {
         Over *over = new Over(new Winner(HOUNDS, TRAP));
         return over;
@@ -176,7 +173,7 @@ bool in_range(loc pos)
     return false;
 }
 
-vector<loc> HHGame::neighbors(loc player_piece, loc dirs[])
+vector<loc> HHGame::neighbors(player p, loc player_piece, loc dirs[])
 {
     int x = player_piece.x;
     int y = player_piece.y;
@@ -184,8 +181,7 @@ vector<loc> HHGame::neighbors(loc player_piece, loc dirs[])
     loc dir, pos;
     board b = get_board();
     vector<loc> vec;
-    cout << "getting neighbors..." << endl;
-    if (get_player() == HOUNDS) {
+    if (p == HOUNDS) {
         // on the board, players can only move diagonally on even
         // columns
         _size = (y % 2 == 0)?5:3;
@@ -202,16 +198,11 @@ vector<loc> HHGame::neighbors(loc player_piece, loc dirs[])
         dirX = dir.x;
         dirY = dir.y;
         pos = loc(x + dirX, y + dirY);
-        cout << "dir: " << dir.print() << " pos: " << pos.print();
         if (in_range(pos)) {
-            cout << " (in range)";
             if (pos.x % 2 == 0) pos.y--;
-            cout << " actual pos: " << pos.print();
             if (b.get(pos) == NO_PLAYER) {
-                cout << " got pushed";
                 vec.push_back(pos);
             }
-            cout << endl;
         }
     }
     return vec;
@@ -225,11 +216,9 @@ bool HHGame::is_legal_move(MovePlayer *m)
     board b = curr_state._board;
     player p = curr_state._player;
     // check if the move's "from" location holds the current player
-    cout << "from loc: " << from.print() << endl;
-    cout << "to loc: " << to.print() << endl;
     if (b.get(from) == p) {
         // check the move's "to" location is a neighbor of the player at the "from" location
-        vector<loc> possible_moves = neighbors(from, (p == HOUNDS)?hounds_dirs:hare_dirs);
+        vector<loc> possible_moves = neighbors(p, from, (p == HOUNDS)?hounds_dirs:hare_dirs);
         int _size = possible_moves.size();
         for (int i = 0; i < _size; i++)
             if (possible_moves[i].equals(to)) return true;
@@ -243,13 +232,15 @@ void HHGame::make_move(MovePlayer *m)
     loc from = m->from_loc;
     loc to = m->to_loc;
     int dirX = to.x - from.x;
-    int dirY = to.y - from.y;
-    if (dirX == 0 && (dirY == -1 || dirY == 1)) {
-        hounds_vertical_moves++;
-    } else {
-        hounds_vertical_moves = 0;
+    int dirY = ((to.x % 2 == 0)?(to.y + 1):to.y) -
+                ((from.x % 2 == 0)?(from.y + 1):from.y);
+    if (curr_state._player == HOUNDS) {
+        if ((dirX == -1 || dirX == 1) && dirY == 0) {
+            hounds_vertical_moves += 1;
+        } else {
+            hounds_vertical_moves = 0;
+        }
     }
-
     board b = get_board();
     b.setPos(from, NO_PLAYER);
     b.setPos(to, get_player());
@@ -257,10 +248,7 @@ void HHGame::make_move(MovePlayer *m)
 
     // update game
     status *curr_status = get_status();
-    cout << "\n\n\n" << curr_status->status_to_string() << endl;
-
     if (curr_status->status_to_string().substr(0, 4) == "Over") {
-        cout << "in make_move. Game is Over."<<endl;
         Over *over = (Over *)(curr_status);
         Winner *winner = (Winner *)(over->_outcome);
         if (winner->_player == HARE) {
@@ -270,7 +258,6 @@ void HHGame::make_move(MovePlayer *m)
         }
         roundIsOver = true;
     } else { // In_play
-        cout << "in make_move. Game is In_Play. SWITCHED PLAYER!" << endl;
         switch_player();
     }
     delete curr_status;

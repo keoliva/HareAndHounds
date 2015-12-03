@@ -14,9 +14,9 @@
 #ifdef __APPLE__
 #include <GLUT/glut.h>
 #else
-#define GLEW_STATIC 1
-#include <GL/glew.h>
-
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glut.h>
 #endif
 
 #include <stdlib.h>
@@ -27,14 +27,12 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include "include/draw.h"
-#include "include/Obj.h"
 using namespace std;
 
 HHGame *game;
-Obj hounds = Obj(HOUNDS);
-char ch = '1';
-int selection_index = 0;
+Draw *draw;
 float z = -6.0f;
+int selection_index = 0;
 float _angle = 0.0;
 float y_angle = 0.0;
 loc selected_coord = loc(-1, -1);
@@ -59,12 +57,10 @@ static void display(void)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    glTranslated(0, 0, z);
-
     // add positioned light
-    GLfloat ambientColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, ambientColor);
-    GLfloat lightColor0[] = {0.5f, 0.5f, 0.5f, 1.0f};
+    GLfloat ambient[] = { 0.75f,0.75f, 0.75f, 1.0 };
+    glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+    /**GLfloat lightColor0[] = {0.5f, 0.5f, 0.5f, 1.0f};
     GLfloat lightPos0[] = {4.0f, 0.0f, 8.0f, 1.0f};
     glLightfv(GL_LIGHT0, GL_DIFFUSE, lightColor0);
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
@@ -74,81 +70,68 @@ static void display(void)
     // coming from direction (-1, 0.5, 0.5)
     GLfloat lightPos1[] = {-1.0f, 0.5f, 0.5f, 0.0f}; // last elem represents light is directed, not positioned
     glLightfv(GL_LIGHT1, GL_DIFFUSE, lightColor1);
-    glLightfv(GL_LIGHT1, GL_POSITION, lightPos1);
+    glLightfv(GL_LIGHT1, GL_POSITION, lightPos1);*/
 
-    hounds.draw(z, _angle, y_angle);
-    /**if (selection_index) { // something was just clicked
-        loc coord = getBoardCoordOfSelection(selection_index);
-        cout << "selected: " << coord.print() << endl;
-        cout << "current_player: " << ((game->get_player() == HOUNDS)?"HOUNDS":"HARE") << endl;
+    if (selection_index) { // something was just clicked
+        loc coord = draw->getBoardCoordOfSelection(selection_index);
         if (game->get_player() == HOUNDS) {
             if (selected_coord.x != -1) { // have clicked a player piece before
-                cout << "you selected the hound at: " << selected_coord.print() << endl;
                 // switch selected coord with this one
                 if (game->get_board().get(coord) == HOUNDS) {
                     selected_coord = coord;
-                    drawGame(game, &selected_coord);
+                    draw->drawGame(game, &selected_coord);
                 } else {
-                     MovePlayer m = MovePlayer(selected_coord, coord);
-                    cout << "process of deciding if your move was legal" << endl;
+                    MovePlayer m = MovePlayer(selected_coord, coord);
                     try {
-                        cout << "move IS LEGAL" <<endl;
                         game->make_move(&m);
                         selection_index = 0;
                         selected_coord = loc(-1, -1);
-                        drawGame(game);
+                        draw->drawGame(game);
                     } catch(IllegalMoveError &e) {
-                        cout << "move IS NOT LEGAL" << endl;
                         if (!selected_coord.equals(coord))
                             // keep drawing the player piece highlighted
-                            drawGame(game, &selected_coord, "HOUNDS can only move to an adjacent spot from left to right or up and down");
-                        else drawGame(game, &selected_coord);
+                            draw->drawGame(game, &selected_coord, "HOUNDS can only move to an adjacent spot from left to right or up and down");
+                        else draw->drawGame(game, &selected_coord);
                     }
                 }
             } else { // have not clicked a player piece
-                cout << "process of selecting a hound:" << endl;
                 if (game->get_board().get(coord) == HOUNDS) {
-                    cout<<"place I chose DID have a hound"<<endl;
                     selected_coord = coord;
-                    drawGame(game, &selected_coord);
+                    draw->drawGame(game, &selected_coord);
                 } else {
-                    cout<<"place I chose DID NOT have a hound"<<endl;
                     //selection_index = 0;
-                    drawGame(game, nullptr, "SELECT a hound to move");
+                    draw->drawGame(game, nullptr, "SELECT a hound to move");
                 }
             }
         } else { // hare piece doesn't have to be chosen since there's only once, a legal move should've been chosen
-            cout << "hiyah i'm a hare"<<endl;
             MovePlayer m = MovePlayer(game->get_hare(), coord);
             try {
                 game->make_move(&m);
                 selection_index = 0;
                 // selected_coord is only set if the current player is hounds
-                drawGame(game);
+                draw->drawGame(game);
             } catch(IllegalMoveError &e) {
                 // keep drawing the player piece highlighted
                 // commented out since I want the error message to stay
                 //selection_index = 0;
-                drawGame(game, nullptr, "HARE can move in any direction, as long as it's adjacent to it");
+                draw->drawGame(game, nullptr, "HARE can move in any direction, as long as it's adjacent to it");
             }
         }
     } else {
-        drawGame(game, &selected_coord);
-    }*/
+        draw->drawGame(game, &selected_coord);
+    }
     glutSwapBuffers();
 }
 
 static void mouseButton(int button, int state, int x, int y)
 {
     if (button != GLUT_LEFT_BUTTON || state != GLUT_DOWN || game->roundOver()) return;
-    cout << "mouse at (" << x << ", " << y << ")" << endl;
     int window_height = glutGet(GLUT_WINDOW_HEIGHT);
 
     GLuint index;
     glReadPixels(x, window_height - y - 1, 1, 1, GL_STENCIL_INDEX, GL_UNSIGNED_INT, &index);
 
     selection_index = index;
-    printf("Clicked on pixel %d, %d, stencil index %u\n", x, y, index);
 
     glutPostRedisplay();
 }
@@ -160,6 +143,7 @@ static void key(unsigned char key, int x, int y)
     case 27 :
     case 'q':
         delete game;
+        delete draw;
         exit(0);
         break;
     case 'a':
@@ -187,9 +171,6 @@ static void key(unsigned char key, int x, int y)
         }
         break;
     }
-    cout << "y_angle: " << y_angle << endl;
-    cout << "_angle: " << _angle << endl;
-    cout << "z: " << z << endl;
     glutPostRedisplay();
 }
 
@@ -201,11 +182,17 @@ static void idle(void)
 void init(void)
 {
     glEnable(GL_CULL_FACE);
-    //glCullFace(GL_BACK);
-
     glEnable(GL_DEPTH_TEST);
 
+    glEnable(GL_LIGHTING); // enable lighting
+    glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_LIGHT0); // enable light #0
+ // enable light #1
+    //glEnable(GL_NORMALIZE); // automatically normalize normals*/
+    glEnable(GL_SMOOTH);
+
     game = new HHGame();
+    draw = new Draw();
 }
 
 int main(int argc, char *argv[])
@@ -215,29 +202,16 @@ int main(int argc, char *argv[])
     glutInitWindowPosition(10,10);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_STENCIL);
 
-
     glutCreateWindow("Hare and Hounds");
 
     glutReshapeFunc(resize);
     glutDisplayFunc(display);
-    //glutMouseFunc(mouseButton);
+    glutMouseFunc(mouseButton);
     glutKeyboardFunc(key);
-    glutIdleFunc(idle);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_LIGHTING); // enable lighting
-    glEnable(GL_LIGHT0); // enable light #0
-    glEnable(GL_LIGHT1); // enable light #1
-    glEnable(GL_NORMALIZE); // automatically normalize normals
-
-    //glEnable(GL_SMOOTH);
-    //init();*/
-    //cout << "Writing hare.cpp.." << endl;
-    //Obj obj = Obj("resources/the_hounds.obj", HOUNDS);
-    //cout << "finished writing hare.cpp..." << endl;
-    hounds.loadObj();
-
+    //glutIdleFunc(idle);
+    init();
+    //Obj *hare = new Obj("resources/the_hare.obj", HARE);
+    //delete hare;
     glutMainLoop();
     return EXIT_SUCCESS;
 }

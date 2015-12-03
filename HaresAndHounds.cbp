@@ -14,6 +14,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-g" />
+					<Add directory="include" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -24,6 +25,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -47,19 +49,16 @@
 			<Add directory="C:/Users/Kayla/Downloads/glew-1.5.4-mingw32/glew-1.5.4-mingw32/lib" />
 		</Linker>
 		<Unit filename="Game.cpp" />
+		<Unit filename="Obj.cpp" />
 		<Unit filename="draw.cpp" />
-		<Unit filename="imag.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="imag.h" />
 		<Unit filename="include/Game.h" />
+		<Unit filename="include/Obj.h" />
 		<Unit filename="include/draw.h" />
+		<Unit filename="include/hare.h" />
+		<Unit filename="include/hounds.h" />
 		<Unit filename="main.cpp" />
-		<Unit filename="resources/hound.obj" />
-		<Unit filename="resources/rand.txt" />
-		<Unit filename="resources/the_hounds.mtl" />
+		<Unit filename="resources/the_hare.obj" />
 		<Unit filename="resources/the_hounds.obj" />
-		<Unit filename="resources/trumpet.obj" />
 		<Extensions>
 			<code_completion />
 			<envvars />

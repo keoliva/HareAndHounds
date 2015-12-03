@@ -10,10 +10,21 @@
 #endif
 
 #include "Game.h"
+#include "Obj.h"
 #include <math.h>
 #include <sstream>
-// HHGame *game
-void drawGame(HHGame *game=nullptr, loc *selected_coord=nullptr, std::string err_message="");
 
-loc getBoardCoordOfSelection(int index);
+class Draw
+{
+    public:
+        Draw();
+        virtual ~Draw();
+        void drawGame(HHGame *game=nullptr, loc *selected_coord=nullptr, std::string err_message="");
+        loc getBoardCoordOfSelection(int index);
+    private:
+        Obj hounds;
+        Obj hare;
+        Obj& initPlayerPiece(player p);
+        void drawVertices(board gameBoard, loc vertex_selected=loc(-1, -1));
+};
 #endif // INIT_H_INCLUDED

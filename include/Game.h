@@ -26,7 +26,7 @@ class Winner : public outcome {
     player _player;
     Win win;
     Winner (player p, Win w): _player(p), win(w) {};
-    ~Winner() { std::cout << "deleting Winner"<<std::endl; };
+    ~Winner() {};
     std::string outcome_to_string() {
         std::stringstream ss;
         ss << "Winner<" << ((_player == HOUNDS)?"HOUNDS":"HARE") << ">";
@@ -53,7 +53,7 @@ class Over : public status {
 };
 class In_Play : public status {
   public:
-    ~In_Play() { std::cout << "deleting In_Play"; };
+    ~In_Play() {};
     std::string status_to_string() { return "In_Play"; };
 };
 
@@ -99,7 +99,7 @@ class HHGame {
     state curr_state;
     void init_state();
     bool is_legal_move(MovePlayer *m);
-    std::vector<loc> neighbors(loc player_piece, loc dirs[]);
+    std::vector<loc> neighbors(player p, loc player_piece, loc dirs[]);
   public:
     HHGame();
     void restart();
