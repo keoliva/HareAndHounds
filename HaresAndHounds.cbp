@@ -36,7 +36,6 @@
 		<Compiler>
 			<Add option="-Wall" />
 			<Add directory="C:/MinGW/include" />
-			<Add directory="../../../Downloads/glm-0.9.7.1/glm" />
 		</Compiler>
 		<Linker>
 			<Add library="glut32" />

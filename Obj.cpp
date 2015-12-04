@@ -151,7 +151,7 @@ void Obj::draw(float x, float y)
         glColor3f(66/255.0, 24/255.0, 5/255.0);
         glCallList(model);
     } else {
-        glColor3f(241/255.0, 236/255.0, 214/255.0);
+        glColor3f(205/255.0, 183/255.0, 158/255.0);
         glCallList(model+1);
     }
     glPopMatrix();
