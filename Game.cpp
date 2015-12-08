@@ -33,14 +33,13 @@ HHGame::HHGame() {
 // new round or new game
 void HHGame::restart(void)
 {
-    rounds++;
-    roundIsOver = false;
-    hounds_vertical_moves = 0;
     if (gameOver()) {
-        rounds %= 3; // since gameOver() is true, rounds == 3 so rounds % 3 == 0
         hounds_score = 0;
         hare_score = 0;
     }
+    roundIsOver = false;
+    rounds = (++rounds % num_rounds);
+    hounds_vertical_moves = 0;
     init_state();
 }
 void HHGame::init_state()
